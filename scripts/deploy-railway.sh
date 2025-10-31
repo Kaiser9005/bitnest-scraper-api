@@ -122,38 +122,62 @@ fi
 log_success "Repository Git prêt"
 
 ###############################################################################
-# 3. AUTHENTIFICATION RAILWAY
+# 3. AUTHENTIFICATION RAILWAY (NON-INTERACTIVE)
 ###############################################################################
 
 log_info "Vérification authentification Railway..."
 
-# Vérifier si déjà authentifié
-if ! railway whoami &> /dev/null; then
-    log_warning "Non authentifié sur Railway"
-    log_info "Ouverture navigateur pour authentification..."
-    railway login
+# Vérifier RAILWAY_TOKEN (méthode non-interactive pour CI/CD)
+if [ -z "$RAILWAY_TOKEN" ]; then
+    log_error "RAILWAY_TOKEN environment variable not set"
+    echo ""
+    echo "Pour déploiement non-interactif, définissez RAILWAY_TOKEN:"
+    echo "1. Créez un token sur: https://railway.app/account/tokens"
+    echo "2. Exportez: export RAILWAY_TOKEN=your-token-here"
+    echo "3. Relancez ce script"
+    echo ""
+    exit 1
 fi
 
-RAILWAY_USER=$(railway whoami)
-log_success "Authentifié en tant que: $RAILWAY_USER"
+# Vérifier authentification avec token
+RAILWAY_USER=$(RAILWAY_TOKEN=$RAILWAY_TOKEN railway whoami 2>&1)
+if [ $? -eq 0 ]; then
+    log_success "Authentifié via RAILWAY_TOKEN"
+else
+    log_error "RAILWAY_TOKEN invalide"
+    exit 1
+fi
 
 ###############################################################################
-# 4. CONFIGURATION PROJET RAILWAY
+# 4. CONFIGURATION PROJET RAILWAY (NON-INTERACTIVE)
 ###############################################################################
 
 log_info "Configuration projet Railway..."
 
-# Vérifier si projet Railway existe déjà
-if railway status &> /dev/null; then
-    log_info "Projet Railway existant détecté"
-    railway status
+# Vérifier RAILWAY_PROJECT_ID (optionnel)
+if [ -n "$RAILWAY_PROJECT_ID" ]; then
+    log_info "Link au projet Railway: $RAILWAY_PROJECT_ID"
+    RAILWAY_TOKEN=$RAILWAY_TOKEN railway link --project "$RAILWAY_PROJECT_ID" 2>&1
+
+    if [ $? -eq 0 ]; then
+        log_success "Projet Railway lié avec succès"
+    else
+        log_error "Échec link projet Railway"
+        exit 1
+    fi
 else
-    log_info "Création nouveau projet Railway..."
-
-    # Créer projet Railway lié au repo GitHub
-    railway init
-
-    log_success "Projet Railway créé"
+    log_warning "RAILWAY_PROJECT_ID non défini"
+    echo ""
+    echo "OPTIONS:"
+    echo "1. Créer projet via web: https://railway.app/new"
+    echo "2. Exporter PROJECT_ID: export RAILWAY_PROJECT_ID=your-project-id"
+    echo "3. OU utiliser interface web pour déploiement initial"
+    echo ""
+    echo "Pour obtenir PROJECT_ID d'un projet existant:"
+    echo "- Ouvrez votre projet sur railway.app"
+    echo "- L'ID est dans l'URL: railway.app/project/[PROJECT_ID]"
+    echo ""
+    exit 1
 fi
 
 ###############################################################################
@@ -210,18 +234,19 @@ for VAR in "${REQUIRED_VARS[@]}"; do
     fi
 
     log_info "Setting $VAR=$DISPLAY_VALUE"
-    railway variables set "$VAR=$VALUE" > /dev/null 2>&1
+    RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "$VAR=$VALUE" > /dev/null 2>&1
 done
 
-# Variables optionnelles avec valeurs par défaut
-railway variables set "RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-3600000}" > /dev/null 2>&1
-railway variables set "RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-60}" > /dev/null 2>&1
-railway variables set "CACHE_TTL_MS=${CACHE_TTL_MS:-300000}" > /dev/null 2>&1
-railway variables set "PLAYWRIGHT_TIMEOUT_MS=${PLAYWRIGHT_TIMEOUT_MS:-30000}" > /dev/null 2>&1
-railway variables set "PLAYWRIGHT_WAIT_MS=${PLAYWRIGHT_WAIT_MS:-5000}" > /dev/null 2>&1
-railway variables set "MAX_RETRIES=${MAX_RETRIES:-3}" > /dev/null 2>&1
-railway variables set "RETRY_DELAY_MS=${RETRY_DELAY_MS:-2000}" > /dev/null 2>&1
-railway variables set "TELEGRAM_BITNEST_CHANNEL=${TELEGRAM_BITNEST_CHANNEL:-BitnestMonitor}" > /dev/null 2>&1
+# Variables optionnelles avec valeurs par défaut (MODE ÉCONOMIQUE pour budget $5)
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-3600000}" > /dev/null 2>&1
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-30}" > /dev/null 2>&1
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "CACHE_TTL_MS=${CACHE_TTL_MS:-1800000}" > /dev/null 2>&1
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "PLAYWRIGHT_TIMEOUT_MS=${PLAYWRIGHT_TIMEOUT_MS:-20000}" > /dev/null 2>&1
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "PLAYWRIGHT_WAIT_MS=${PLAYWRIGHT_WAIT_MS:-3000}" > /dev/null 2>&1
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "MAX_RETRIES=${MAX_RETRIES:-2}" > /dev/null 2>&1
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "RETRY_DELAY_MS=${RETRY_DELAY_MS:-1500}" > /dev/null 2>&1
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "TELEGRAM_BITNEST_CHANNEL=${TELEGRAM_BITNEST_CHANNEL:-BitnestMonitor}" > /dev/null 2>&1
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway variables set "LOG_LEVEL=${LOG_LEVEL:-warn}" > /dev/null 2>&1
 
 log_success "Variables d'environnement configurées"
 
@@ -231,8 +256,8 @@ log_success "Variables d'environnement configurées"
 
 log_info "Déploiement en cours..."
 
-# Déployer depuis Dockerfile
-railway up --detach
+# Déployer depuis Dockerfile (mode non-interactif avec --detach)
+RAILWAY_TOKEN=$RAILWAY_TOKEN railway up --detach
 
 log_success "Déploiement lancé"
 
@@ -247,13 +272,13 @@ sleep 10
 log_info "Configuration domaine Railway..."
 
 # Générer domaine si pas déjà configuré
-DOMAIN=$(railway domain 2>&1)
+DOMAIN=$(RAILWAY_TOKEN=$RAILWAY_TOKEN railway domain 2>&1)
 
 if [[ "$DOMAIN" == *"No domain"* ]] || [[ "$DOMAIN" == *"error"* ]]; then
     log_info "Génération nouveau domaine..."
-    railway domain
+    RAILWAY_TOKEN=$RAILWAY_TOKEN railway domain
     sleep 5
-    DOMAIN=$(railway domain 2>&1)
+    DOMAIN=$(RAILWAY_TOKEN=$RAILWAY_TOKEN railway domain 2>&1)
 fi
 
 # Extraire l'URL du domaine
