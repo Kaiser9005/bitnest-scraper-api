@@ -5,6 +5,10 @@
  * Uses Playwright Chromium to execute JavaScript and extract data
  */
 
+// IMPORTANT: Set Playwright browsers path BEFORE importing Playwright
+// This ensures browsers are found in /app/.cache (accessible to scraper user)
+process.env.PLAYWRIGHT_BROWSERS_PATH = '/app/.cache/ms-playwright';
+
 const { chromium } = require('playwright');
 const logger = require('./utils/logger');
 
