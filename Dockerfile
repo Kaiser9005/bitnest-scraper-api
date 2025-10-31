@@ -54,8 +54,9 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
 # (--with-deps requires root for apt-get)
 RUN npx playwright install chromium --with-deps
 
-# Create non-root user for security
-RUN useradd -m -u 1000 scraper && \
+# Create non-root user for security WITHOUT home directory
+# -M = no home directory (will use /app as effective home)
+RUN useradd -M -u 1000 scraper && \
     chown -R scraper:scraper /app
 
 # Switch to non-root user
