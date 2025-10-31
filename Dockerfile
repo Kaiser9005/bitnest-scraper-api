@@ -3,7 +3,7 @@
 # ================================================================
 # Optimized for Railway deployment with Playwright support
 # Includes Chromium browser with all system dependencies
-# BUILD VERSION: 2025-10-31-v4-NO-DEPS (Critical fix: remove --with-deps timeout)
+# BUILD VERSION: 2025-10-31-v5-ENV-FIX (Critical fix: ENV before npm ci for postinstall)
 
 FROM node:18-bullseye-slim
 
@@ -41,17 +41,16 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install npm dependencies
+# CRITICAL: Set Playwright path BEFORE npm ci so postinstall hook uses correct location
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
+
+# Install npm dependencies (will trigger postinstall: playwright install chromium)
 RUN npm ci --only=production
 
 # Copy application code
 COPY . .
 
-# Set Playwright browsers path to app directory
-ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
-
-# Install Playwright browsers as ROOT (deps already installed above)
-# No --with-deps needed as system packages are already present
+# Failsafe: Install browsers if postinstall didn't work (should skip if already present)
 RUN npx playwright install chromium
 
 # Create non-root user for security WITHOUT home directory
