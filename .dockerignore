@@ -1,4 +1,4 @@
-# Node
+# Node modules (will be installed in container)
 node_modules/
 npm-debug.log
 
@@ -6,24 +6,34 @@ npm-debug.log
 .git/
 .gitignore
 
-# Environment
+# Environment files (Railway will inject)
 .env
 .env.local
-.env.production
-
-# Documentation
-README.md
-*.md
-
-# Logs
-logs/
-*.log
-
-# Test
-test/
-tests/
-*.test.js
+.env.*.local
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+docs/
+TELEGRAM_SETUP.md
+
+# Scripts (not needed in production)
+scripts/
+
+# Test files
+*.test.js
+test/
+
+# Development dependencies
+nodemon.json

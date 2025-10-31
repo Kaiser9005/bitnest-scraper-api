@@ -1,27 +1,37 @@
-# BitNest Scraper API - Production Docker Image
-# Optimized for Railway/Render deployment
+# ================================================================
+# BITNEST SCRAPER API - Production Docker Image
+# ================================================================
+# Optimized for Railway deployment with Playwright support
+# Includes Chromium browser with all system dependencies
 
-FROM node:18-slim
+FROM node:18-bullseye-slim
 
-# Install Playwright system dependencies
+# Install system dependencies for Playwright
 RUN apt-get update && apt-get install -y \
+    # Chromium dependencies
     libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
     libatk-bridge2.0-0 \
+    libcups2 \
     libdrm2 \
+    libdbus-1-3 \
     libxkbcommon0 \
     libxcomposite1 \
     libxdamage1 \
     libxfixes3 \
     libxrandr2 \
     libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
     libasound2 \
-    libpangocairo-1.0-0 \
-    libcups2 \
+    libatspi2.0-0 \
+    # Additional utilities
+    ca-certificates \
     fonts-liberation \
-    libappindicator3-1 \
-    libnss3 \
-    libnspr4 \
-    libx11-xcb1 \
+    wget \
+    # Cleanup
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -30,27 +40,28 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install npm dependencies
 RUN npm ci --only=production
 
-# Install Playwright browsers (chromium only for efficiency)
-RUN npx playwright install chromium
+# Install Playwright browsers (Chromium only for optimization)
+RUN npx playwright install chromium --with-deps
 
-# Copy application source
-COPY src ./src
+# Copy application code
+COPY . .
 
 # Create non-root user for security
-RUN useradd -m -u 1001 scraper && \
+RUN useradd -m -u 1000 scraper && \
     chown -R scraper:scraper /app
 
+# Switch to non-root user
 USER scraper
 
-# Expose port
+# Expose port (Railway will override with PORT env var)
 EXPOSE 8080
 
-# Health check for Railway/Render
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8080/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+    CMD node -e "require('http').get('http://localhost:${PORT:-8080}/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Start application
-CMD ["node", "src/index.js"]
+CMD ["npm", "start"]
