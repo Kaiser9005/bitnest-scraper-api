@@ -1,0 +1,33 @@
+{
+  "name": "bitnest-scraper-api",
+  "version": "1.0.0",
+  "description": "Webhook API for extracting BitNest indicators with Playwright - Forensic automation",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "node src/scraper.js"
+  },
+  "keywords": [
+    "bitnest",
+    "playwright",
+    "scraping",
+    "webhook",
+    "forensic"
+  ],
+  "author": "FOFAL Forensics",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "playwright": "^1.40.0",
+    "express-rate-limit": "^7.1.5",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

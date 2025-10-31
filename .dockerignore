@@ -1,0 +1,29 @@
+# Node
+node_modules/
+npm-debug.log
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Documentation
+README.md
+*.md
+
+# Logs
+logs/
+*.log
+
+# Test
+test/
+tests/
+*.test.js
+
+# IDE
+.vscode/
+.idea/

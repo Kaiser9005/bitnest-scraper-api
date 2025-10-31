@@ -1,0 +1,21 @@
+# Railway Configuration
+# Optimized for BitNest Scraper API deployment
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+numReplicas = 1
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[[deploy.environmentVariables]]
+name = "PORT"
+value = "8080"
+
+[[deploy.environmentVariables]]
+name = "NODE_ENV"
+value = "production"
