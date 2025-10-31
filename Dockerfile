@@ -3,7 +3,7 @@
 # ================================================================
 # Optimized for Railway deployment with Playwright support
 # Includes Chromium browser with all system dependencies
-# BUILD VERSION: 2025-10-31-v3-16h32 (FORCE Railway rebuild detection)
+# BUILD VERSION: 2025-10-31-v4-NO-DEPS (Critical fix: remove --with-deps timeout)
 
 FROM node:18-bullseye-slim
 
@@ -50,9 +50,9 @@ COPY . .
 # Set Playwright browsers path to app directory
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
 
-# Install Playwright browsers as ROOT with system deps
-# (--with-deps requires root for apt-get)
-RUN npx playwright install chromium --with-deps
+# Install Playwright browsers as ROOT (deps already installed above)
+# No --with-deps needed as system packages are already present
+RUN npx playwright install chromium
 
 # Create non-root user for security WITHOUT home directory
 # -M = no home directory (will use /app as effective home)
