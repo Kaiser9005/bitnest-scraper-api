@@ -3,7 +3,7 @@
 # ================================================================
 # Optimized for Railway deployment with Playwright support
 # Includes Chromium browser with all system dependencies
-# BUILD VERSION: 2025-10-31-v5-ENV-FIX (Critical fix: ENV before npm ci for postinstall)
+# BUILD VERSION: 2025-10-31-v6-UID-FIX (Critical fix: UID 1001 to avoid node user conflict + ENV before npm ci)
 
 FROM node:18-bullseye-slim
 
@@ -55,7 +55,7 @@ RUN npx playwright install chromium
 
 # Create non-root user for security WITHOUT home directory
 # -M = no home directory (will use /app as effective home)
-RUN useradd -M -u 1000 scraper && \
+RUN useradd -M -u 1001 scraper && \
     chown -R scraper:scraper /app && \
     mkdir -p /home/scraper && \
     ln -s /app/.cache /home/scraper/.cache && \
