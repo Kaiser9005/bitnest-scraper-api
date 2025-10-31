@@ -61,6 +61,10 @@ RUN useradd -m -u 1000 scraper && \
 # Switch to non-root user
 USER scraper
 
+# CRITICAL: Override HOME to /app so Playwright uses /app/.cache
+# Default useradd HOME is /home/scraper which causes path mismatch
+ENV HOME=/app
+
 # Expose port (Railway will override with PORT env var)
 EXPOSE 8080
 
