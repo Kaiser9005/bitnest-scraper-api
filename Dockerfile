@@ -43,9 +43,6 @@ COPY package*.json ./
 # Install npm dependencies
 RUN npm ci --only=production
 
-# Install Playwright browsers (Chromium only for optimization)
-RUN npx playwright install chromium --with-deps
-
 # Copy application code
 COPY . .
 
@@ -55,6 +52,12 @@ RUN useradd -m -u 1000 scraper && \
 
 # Switch to non-root user
 USER scraper
+
+# Set Playwright browsers path to app directory (accessible by scraper user)
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
+
+# Install Playwright browsers as scraper user
+RUN npx playwright install chromium --with-deps
 
 # Expose port (Railway will override with PORT env var)
 EXPOSE 8080
