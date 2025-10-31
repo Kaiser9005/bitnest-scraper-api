@@ -19,7 +19,7 @@
  * - CRITICAL: Divergence > 5% (investigation requise)
  */
 
-const { logger } = require('../utils/logger');
+const logger = require('../utils/logger');
 
 /**
  * Seuils de divergence pour la validation
