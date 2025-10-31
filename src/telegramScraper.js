@@ -31,22 +31,26 @@ const TELEGRAM_CONFIG = {
 
 /**
  * Patterns regex pour extraction des indicateurs
- * Même logique que scraper.js pour cohérence
+ * Format réel BitnestMonitor (vérifié 31 Oct 2025 via MCP Telegram):
+ * 💧 Liquidez: 22,137,315.46 USDT
+ * 💧 Liquidez: 6,185,201.04 USDC
+ * 🔢 Total: 28,322,516.50
  */
 const INDICATOR_PATTERNS = {
-  participants: /Participants?[\s:]+(\d{1,3}(?:[,\s]\d{3})*)/i,
-  revenues: /(?:Revenues?|Participant income)[\s:]+(\d{1,3}(?:[,\s]\d{3})*)[\s]*(?:USDT)?/i,
-  liquidity: /Liquidity[\s:]+(\d{1,3}(?:[,\s]\d{3})*)[\s]*(?:USDT)?/i
+  liquidityUSDT: /💧\s*Liquidez:\s*([\d,\.]+)\s*USDT/i,
+  liquidityUSDC: /💧\s*Liquidez:\s*([\d,\.]+)\s*USDC/i,
+  total: /🔢\s*Total:\s*([\d,\.]+)/i
 };
 
 /**
- * Parse un nombre avec séparateurs de milliers
- * Exemples: "2,110,192" → 2110192, "752 040 501" → 752040501
+ * Parse un nombre avec séparateurs de milliers et décimales
+ * Exemples: "22,137,315.46" → 22137315.46, "6,185,201.04" → 6185201.04
  */
 function parseNumber(str) {
   if (!str) return null;
-  const cleaned = str.replace(/[,\s]/g, '');
-  const num = parseInt(cleaned, 10);
+  // Remove thousand separators (commas), keep decimal point
+  const cleaned = str.replace(/,/g, '');
+  const num = parseFloat(cleaned);
   return isNaN(num) ? null : num;
 }
 
@@ -61,31 +65,33 @@ function parseIndicators(text) {
     return null;
   }
 
-  const participantsMatch = text.match(INDICATOR_PATTERNS.participants);
-  const revenuesMatch = text.match(INDICATOR_PATTERNS.revenues);
-  const liquidityMatch = text.match(INDICATOR_PATTERNS.liquidity);
+  // Extract liquidity components from BitnestMonitor format
+  const liquidityUSDTMatch = text.match(INDICATOR_PATTERNS.liquidityUSDT);
+  const liquidityUSDCMatch = text.match(INDICATOR_PATTERNS.liquidityUSDC);
+  const totalMatch = text.match(INDICATOR_PATTERNS.total);
 
-  if (!participantsMatch || !revenuesMatch || !liquidityMatch) {
+  // Total is the primary indicator we need
+  if (!totalMatch) {
     return null;
   }
 
-  const participants = parseNumber(participantsMatch[1]);
-  const revenues = parseNumber(revenuesMatch[1]);
-  const liquidity = parseNumber(liquidityMatch[1]);
+  const liquidityUSDT = liquidityUSDTMatch ? parseNumber(liquidityUSDTMatch[1]) : null;
+  const liquidityUSDC = liquidityUSDCMatch ? parseNumber(liquidityUSDCMatch[1]) : null;
+  const total = parseNumber(totalMatch[1]);
 
-  // Validation: tous les indicateurs doivent être des nombres positifs
-  if (!participants || !revenues || !liquidity) {
-    return null;
-  }
-
-  if (participants <= 0 || revenues <= 0 || liquidity <= 0) {
+  // Validation: total must be a positive number
+  if (!total || total <= 0) {
     return null;
   }
 
   return {
-    participants,
-    revenues,
-    liquidity,
+    liquidity: total,
+    liquidity_usdt: liquidityUSDT,
+    liquidity_usdc: liquidityUSDC,
+    // Note: participants and revenues not available in current BitnestMonitor format
+    // Messages only show contribution amounts and liquidity totals
+    participants: null,
+    revenues: null,
     timestamp: new Date().toISOString(),
     source: 'telegram'
   };
