@@ -4,9 +4,29 @@
 
 ---
 
-## ⚡ Option 1: Script Automatique (Recommandé)
+## 📖 Guides de Déploiement
 
-Le script automatise TOUT le processus :
+**Déploiement Non-Interactif** (recommandé pour automation):
+- **Guide complet**: [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)
+- Utilise RAILWAY_TOKEN pour CI/CD
+- Optimisé pour budget $5/mois
+- Configuration MODE ÉCONOMIQUE automatique
+
+**Déploiement Rapide** (ce guide):
+- Installation et setup en 3 étapes
+- Approche simplifiée
+- Parfait pour premier déploiement
+
+---
+
+## ⚡ Option 1: Script Automatique Non-Interactif (Recommandé)
+
+### Prérequis
+
+1. **Créer Railway API Token**: https://railway.app/account/tokens
+2. **Créer Railway Project**: https://railway.app/new (noter le PROJECT_ID)
+
+### Déploiement
 
 ```bash
 cd bitnest-scraper-api
@@ -14,19 +34,28 @@ cd bitnest-scraper-api
 # Installer Railway CLI si pas déjà fait
 npm install -g @railway/cli
 
+# Copier et configurer .env
+cp .env.example .env
+# Éditez .env avec vos RAILWAY_TOKEN et RAILWAY_PROJECT_ID
+
+# Exporter variables d'environnement
+export $(grep -v '^#' .env | xargs)
+
 # Exécuter script de déploiement automatique
 ./scripts/deploy-railway.sh
 ```
 
-Le script va :
-- ✅ Vérifier les prérequis
-- ✅ Authentifier Railway
-- ✅ Créer le projet Railway
-- ✅ Configurer toutes les variables d'environnement
-- ✅ Déployer l'application Docker
-- ✅ Générer le domaine
-- ✅ Tester le health check
-- ✅ Afficher l'URL de l'API
+Le script va automatiquement:
+- ✅ Vérifier les prérequis (Railway CLI, Git, Node.js)
+- ✅ S'authentifier via RAILWAY_TOKEN
+- ✅ Lier au projet via RAILWAY_PROJECT_ID
+- ✅ Configurer variables MODE ÉCONOMIQUE (budget $5)
+- ✅ Déployer application Docker
+- ✅ Générer domaine Railway
+- ✅ Tester health check
+- ✅ Afficher URL API + instructions Apps Script
+
+**Guide détaillé**: Voir [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md) pour instructions complètes
 
 ---
 
