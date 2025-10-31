@@ -9,6 +9,11 @@
 // This ensures browsers are found in /app/.cache (accessible to scraper user)
 process.env.PLAYWRIGHT_BROWSERS_PATH = '/app/.cache/ms-playwright';
 
+// DEBUG: Log browser path configuration
+console.log('🔍 PLAYWRIGHT_BROWSERS_PATH:', process.env.PLAYWRIGHT_BROWSERS_PATH);
+console.log('🔍 Current user HOME:', process.env.HOME);
+console.log('🔍 Process user:', process.env.USER);
+
 const { chromium } = require('playwright');
 const logger = require('./utils/logger');
 
