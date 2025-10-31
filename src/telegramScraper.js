@@ -253,14 +253,18 @@ class TelegramBitnestScraper {
     } catch (error) {
       const extractionTime = Date.now() - startTime;
 
+      // Defensive: handle cases where error might be undefined or not an Error object
+      const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+
       logger.error('❌ Telegram extraction failed', {
-        error: error.message,
+        error: errorMessage,
+        error_type: typeof error,
         extraction_time_ms: extractionTime
       });
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
         metadata: {
           extraction_time_ms: extractionTime
         }

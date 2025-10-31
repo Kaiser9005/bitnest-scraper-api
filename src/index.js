@@ -17,6 +17,11 @@ const { extractBitnestDataFromTelegram } = require('./telegramScraper');
 const { crossValidate } = require('./validators/crossValidator');
 
 const app = express();
+
+// Railway reverse proxy configuration
+// Trust first proxy for correct IP detection in rate limiting and logging
+app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 8080;
 
 // Middleware
