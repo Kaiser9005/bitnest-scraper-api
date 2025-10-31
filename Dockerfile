@@ -3,9 +3,13 @@
 # ================================================================
 # Optimized for Railway deployment with Playwright support
 # Includes Chromium browser with all system dependencies
-# BUILD VERSION: 2025-10-31-v6-UID-FIX (Critical fix: UID 1001 to avoid node user conflict + ENV before npm ci)
+# BUILD VERSION: 2025-10-31-v7-CACHE-BUSTER (Force Railway Git cache refresh + UID 1001 + ENV before npm ci)
 
 FROM node:18-bullseye-slim
+
+# Force Railway cache invalidation - timestamp: 2025-10-31T22:44:00Z
+# Previous builds had corrupted Git cache mixing commits
+# This build MUST use complete commit with ENV before npm ci
 
 # Install system dependencies for Playwright
 RUN apt-get update && apt-get install -y \
