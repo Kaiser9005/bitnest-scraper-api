@@ -57,13 +57,17 @@ RUN npx playwright install chromium --with-deps
 # Create non-root user for security WITHOUT home directory
 # -M = no home directory (will use /app as effective home)
 RUN useradd -M -u 1000 scraper && \
-    chown -R scraper:scraper /app
+    chown -R scraper:scraper /app && \
+    mkdir -p /home/scraper && \
+    ln -s /app/.cache /home/scraper/.cache && \
+    chown -h scraper:scraper /home/scraper/.cache
 
 # Switch to non-root user
 USER scraper
 
 # CRITICAL: Override HOME to /app so Playwright uses /app/.cache
 # Default useradd HOME is /home/scraper which causes path mismatch
+# Symlink ensures Playwright finds browsers regardless of path resolution
 ENV HOME=/app
 
 # Expose port (Railway will override with PORT env var)
