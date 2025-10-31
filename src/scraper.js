@@ -73,10 +73,10 @@ async function extractBitnestData() {
       textLength: bodyText.length
     });
 
-    // Parse indicators with regex (same patterns as Python script)
-    const participantsMatch = bodyText.match(/Participants[\s\n]+(\d{1,3}(?:,\d{3})*)/i);
-    const revenuesMatch = bodyText.match(/Participant income[\s\n]+(\d{1,3}(?:,\d{3})*)[\s\n]+USDT/i);
-    const liquidityMatch = bodyText.match(/Liquidity[\s\n]+(\d{1,3}(?:,\d{3})*)[\s\n]+USDT/i);
+    // Parse indicators with regex (flexible spacing: * allows 0+ spaces)
+    const participantsMatch = bodyText.match(/Participants[\s\n]*(\d{1,3}(?:,\d{3})*)/i);
+    const revenuesMatch = bodyText.match(/Participant income[\s\n]*(\d{1,3}(?:,\d{3})*)[\s\n]*USDT/i);
+    const liquidityMatch = bodyText.match(/Liquidity[\s\n]*(\d{1,3}(?:,\d{3})*)[\s\n]*USDT/i);
 
     // Parse and validate
     const participants = participantsMatch
