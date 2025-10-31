@@ -13,7 +13,7 @@ const cache = require('./utils/cache');
 const authenticateApiKey = require('./middleware/auth');
 const rateLimiter = require('./middleware/rateLimiter');
 const { extractWithRetry } = require('./scraper');
-const { extractBitnestDataFromTelegram } = require('./telegramScraper');
+const { extractBitnestDataFromTelegram } = require('./telegramBotScraper');
 const { crossValidate } = require('./validators/crossValidator');
 
 const app = express();
