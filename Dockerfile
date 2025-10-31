@@ -3,7 +3,7 @@
 # ================================================================
 # Optimized for Railway deployment with Playwright support
 # Includes Chromium browser with all system dependencies
-# BUILD VERSION: 2025-10-31-v2 (force rebuild)
+# BUILD VERSION: 2025-10-31-v3-16h32 (FORCE Railway rebuild detection)
 
 FROM node:18-bullseye-slim
 
