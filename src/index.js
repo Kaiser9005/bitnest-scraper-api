@@ -13,6 +13,8 @@ const cache = require('./utils/cache');
 const authenticateApiKey = require('./middleware/auth');
 const rateLimiter = require('./middleware/rateLimiter');
 const { extractWithRetry } = require('./scraper');
+const { extractBitnestDataFromTelegram } = require('./telegramScraper');
+const { crossValidate } = require('./validators/crossValidator');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -98,6 +100,97 @@ app.get('/api/scrape-bitnest', authenticateApiKey, async (req, res) => {
 
   } catch (error) {
     logger.error('Unexpected error in scrape endpoint', {
+      error: error.message,
+      stack: error.stack
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/scrape-telegram
+ * Telegram extraction endpoint - requires API key authentication
+ * Extracts data from BitnestMonitor Telegram channel
+ */
+app.get('/api/scrape-telegram', authenticateApiKey, async (req, res) => {
+  try {
+    logger.info('Telegram scraping request received');
+
+    const result = await extractBitnestDataFromTelegram();
+
+    if (result.success) {
+      logger.info('Telegram extraction successful', {
+        extractionTimeMs: result.metadata.extraction_time_ms
+      });
+    } else {
+      logger.warn('Telegram extraction failed', {
+        error: result.error
+      });
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    logger.error('Unexpected error in Telegram scrape endpoint', {
+      error: error.message,
+      stack: error.stack
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/scrape-dual
+ * Dual-source extraction with cross-validation
+ * Calls both Playwright and Telegram, validates results
+ */
+app.get('/api/scrape-dual', authenticateApiKey, async (req, res) => {
+  try {
+    logger.info('Dual-source scraping request received');
+
+    const startTime = Date.now();
+
+    // Execute both extractions in parallel
+    const [webhookResult, telegramResult] = await Promise.allSettled([
+      extractWithRetry(parseInt(process.env.MAX_RETRIES) || 3),
+      extractBitnestDataFromTelegram()
+    ]);
+
+    // Convert Promise.allSettled results to standard format
+    const webhook = webhookResult.status === 'fulfilled'
+      ? webhookResult.value
+      : { success: false, error: webhookResult.reason?.message || 'Webhook extraction failed' };
+
+    const telegram = telegramResult.status === 'fulfilled'
+      ? telegramResult.value
+      : { success: false, error: telegramResult.reason?.message || 'Telegram extraction failed' };
+
+    // Cross-validate the results
+    const validatedResult = crossValidate(webhook, telegram);
+
+    // Add total execution time
+    validatedResult.metadata.total_request_time_ms = Date.now() - startTime;
+
+    logger.info('Dual-source extraction completed', {
+      validation_status: validatedResult.validation.status,
+      sources_used: validatedResult.validation.sources_used,
+      total_time_ms: validatedResult.metadata.total_request_time_ms
+    });
+
+    res.json(validatedResult);
+
+  } catch (error) {
+    logger.error('Unexpected error in dual-source scrape endpoint', {
       error: error.message,
       stack: error.stack
     });

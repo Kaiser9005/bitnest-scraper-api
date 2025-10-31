@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node src/scraper.js"
+    "test": "node src/scraper.js",
+    "test:telegram": "node src/telegramScraper.js",
+    "setup:telegram": "node scripts/setup-telegram.js"
   },
   "keywords": [
     "bitnest",
@@ -22,7 +24,9 @@
     "playwright": "^1.40.0",
     "express-rate-limit": "^7.1.5",
     "dotenv": "^16.3.1",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "telegram": "^2.19.7",
+    "input": "^1.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
